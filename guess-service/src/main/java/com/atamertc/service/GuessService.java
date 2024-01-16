@@ -48,21 +48,21 @@ public class GuessService extends ServiceManager<Guess, Long> {
     public String makeGuess(GuessRequestDto dto) {
         Optional<Guess> guess = repository.findById(dto.getGuessid());
         if (guess.get().getGuessRights() == 0) {
-            return "Tahmin hakkiniz bitmistir :(";
+            return "Your right to guess has expired. :(";
         }
         if (guess.get().isVerified()) {
-            throw new GuessManagerException(ErrorType.BAD_REQUEST,"Tahmin daha once dogrulanmis.");
+            throw new GuessManagerException(ErrorType.BAD_REQUEST,"The prediction has been confirmed before.");
         }
         guess.get().getGuesses().add(dto.getGuess());
         if (guess.get().getCorrectAnswer().equalsIgnoreCase(dto.getGuess())) {
             guess.get().setVerified(true);
             update(guess.get());
             createScoreProducer.createScore(CreateScoreModel.builder().score(10).userid(dto.getUserid()).build());
-            return "Tebrikler! Dogru Tahmin Ettiniz...";
+            return "Congratulations! You guessed it right...";
         }
         guess.get().setGuessRights(guess.get().getGuessRights() - 1);
         update(guess.get());
         createScoreProducer.createScore(CreateScoreModel.builder().score(-5).userid(dto.getUserid()).build());
-        return "Yanlis cevap lutfen tekrar deneyiniz" + guess.get().getGuessRights() + "hakkiniz kaldi";
+        return "Wrong answer please try again. " + guess.get().getGuessRights() + " right is left.";
     }
 }
